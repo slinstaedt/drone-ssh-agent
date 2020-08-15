@@ -11,6 +11,7 @@ if [ $# -eq 0 ]; then
 
 	key="${PLUGIN_SSH_KEY:-${SSH_KEY:-}}"
 	if [ -n "${key:+x}" ]; then
+		sleep 1
 		key_file=$(mktemp)
 		printf "$key" > $key_file
 		ssh-add $key_file
