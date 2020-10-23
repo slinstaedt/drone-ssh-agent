@@ -3,22 +3,21 @@ set -euo pipefail
 
 if [ $# -eq 0 ]; then
 	mkdir -p $(dirname $SSH_AUTH_SOCK)
-	chmod 700 $(dirname $SSH_AUTH_SOCK)
 	test -f $SSH_AUTH_SOCK && rm -f $SSH_AUTH_SOCK
 
 	ssh-agent -a $SSH_AUTH_SOCK -D &
 	socat -d -s TCP-LISTEN:2000,fork,reuseaddr UNIX-CONNECT:$SSH_AUTH_SOCK &
+	sleep 1
 
 	key="${PLUGIN_SSH_KEY:-${SSH_KEY:-}}"
 	if [ -n "${key:+x}" ]; then
-		sleep 1
-		key_file=$(mktemp)
-		printf "$key" > $key_file
-		ssh-add $key_file
-		rm -f $key_file
+		SSH_KEY_FILE=$(mktemp)
+		printf "$key" > $SSH_KEY_FILE
+	fi
+	if [ -n "${SSH_KEY_FILE:+x}" ]; then
+		ssh-add $SSH_KEY_FILE
 		ssh-add -l
 	fi
-
 	trap 'kill $(jobs -p)' SIGTERM
 	wait
 elif [ "$1" == "connect" ]; then
